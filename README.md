@@ -38,7 +38,7 @@ Visita `http://localhost:3000`.
 ## Desplegar en Vercel
 
 1. Importa este repositorio desde Vercel.
-2. Añade `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` y
+2. Añade `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` y
    `NEXT_PUBLIC_SITE_URL` en Project Settings → Environment Variables.
 3. Despliega. Vercel detectará Next.js automáticamente.
 
