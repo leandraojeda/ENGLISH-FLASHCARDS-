@@ -83,6 +83,61 @@ button {
   color: var(--purple);
 }
 
+.main-nav {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+  margin-right: 24px;
+}
+
+.main-nav button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 11px;
+  cursor: pointer;
+  display: flex;
+  font-size: 12px;
+  font-weight: 900;
+  gap: 6px;
+  padding: 10px 13px;
+}
+
+.main-nav button:hover,
+.main-nav button.active {
+  background: #f0ebff;
+  color: var(--purple);
+}
+
+.main-nav .nav-add {
+  background: var(--lime);
+  box-shadow: 0 3px 0 var(--lime-dark);
+}
+
+.main-nav .nav-add:hover {
+  background: var(--lime);
+  color: var(--ink);
+}
+
+.top-actions {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.menu-button {
+  align-items: center;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  display: none;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+
 .streak {
   align-items: center;
   background: #fff3de;
@@ -721,6 +776,42 @@ textarea {
   padding: 7px 10px;
 }
 
+.card-actions {
+  align-items: center;
+  display: flex;
+  gap: 7px;
+}
+
+.edit-card,
+.delete-card {
+  align-items: center;
+  background: #f4f1ff;
+  border: 0;
+  border-radius: 10px;
+  color: var(--purple);
+  cursor: pointer;
+  display: flex;
+  height: 36px;
+  justify-content: center;
+  transition: 0.2s ease;
+  width: 36px;
+}
+
+.delete-card {
+  background: #fff0ed;
+  color: #d94f45;
+}
+
+.edit-card:hover,
+.delete-card:hover {
+  transform: translateY(-2px);
+}
+
+.library-toast {
+  bottom: 24px;
+  position: fixed;
+}
+
 footer {
   border-top: 1px solid var(--line);
   color: #9893a7;
@@ -751,6 +842,38 @@ footer {
 @media (max-width: 700px) {
   .topbar {
     height: 66px;
+  }
+
+  .main-nav {
+    align-items: stretch;
+    background: white;
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 12px 25px rgba(36, 32, 63, 0.12);
+    display: none;
+    flex-direction: column;
+    left: 0;
+    margin: 0;
+    padding: 14px 20px 20px;
+    position: absolute;
+    right: 0;
+    top: 66px;
+  }
+
+  .main-nav.open {
+    display: flex;
+  }
+
+  .main-nav button {
+    justify-content: flex-start;
+    padding: 13px 15px;
+  }
+
+  .menu-button {
+    display: flex;
+  }
+
+  .streak span {
+    display: none;
   }
 
   .dashboard,
@@ -799,7 +922,36 @@ footer {
     grid-column: 1 / -1;
   }
 
+  .card-list article {
+    align-items: start;
+    grid-template-columns: auto 1fr;
+  }
+
+  .card-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    width: 100%;
+  }
+
   footer {
     gap: 10px;
+  }
+}
+
+@media (min-width: 701px) and (max-width: 980px) {
+  .topbar {
+    padding-inline: 24px;
+  }
+
+  .main-nav {
+    margin-right: 12px;
+  }
+
+  .main-nav button {
+    padding-inline: 10px;
+  }
+
+  .action-grid {
+    grid-template-columns: 1fr;
   }
 }

@@ -13,7 +13,7 @@ create table if not exists public.flashcards (
 alter table public.flashcards enable row level security;
 
 grant usage on schema public to anon, authenticated;
-grant select, insert, update on table public.flashcards to anon, authenticated;
+grant select, insert, update, delete on table public.flashcards to anon, authenticated;
 
 drop policy if exists "Public can read flashcards" on public.flashcards;
 create policy "Public can read flashcards"
@@ -33,3 +33,9 @@ on public.flashcards for update
 to anon, authenticated
 using (true)
 with check (true);
+
+drop policy if exists "Public can delete flashcards" on public.flashcards;
+create policy "Public can delete flashcards"
+on public.flashcards for delete
+to anon, authenticated
+using (true);

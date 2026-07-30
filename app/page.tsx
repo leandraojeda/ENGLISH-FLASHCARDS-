@@ -8,6 +8,8 @@ import {
   ChevronRight,
   Flame,
   Library,
+  Menu,
+  Pencil,
   Plus,
   RotateCcw,
   Sparkles,
@@ -73,6 +75,8 @@ export default function Home() {
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [mobileMenu, setMobileMenu] = useState(false);
   const [reviewIndex, setReviewIndex] = useState(0);
   const [answer, setAnswer] = useState("");
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
@@ -108,6 +112,42 @@ export default function Home() {
   const addCard = async (event: FormEvent) => {
     event.preventDefault();
     if (!form.english.trim() || !form.spanish.trim()) return;
+    if (editingId) {
+      const changes = {
+        english: form.english.trim(),
+        spanish: form.spanish.trim(),
+        example: form.example.trim(),
+      };
+      if (supabase) {
+        const { error } = await supabase
+          .from("flashcards")
+          .update(changes)
+          .eq("id", editingId);
+        if (error) {
+          setNotice(`No se pudo actualizar: ${error.message}`);
+          return;
+        }
+        setCards((current) =>
+          current.map((card) =>
+            card.id === editingId ? { ...card, ...changes } : card,
+          ),
+        );
+      } else {
+        persistLocal(
+          cards.map((card) =>
+            card.id === editingId ? { ...card, ...changes } : card,
+          ),
+        );
+      }
+      setEditingId(null);
+      setForm({ english: "", spanish: "", example: "" });
+      setNotice("¡Tarjeta actualizada!");
+      setTimeout(() => {
+        setNotice("");
+        setScreen("library");
+      }, 700);
+      return;
+    }
     const card: Card = {
       id: crypto.randomUUID(),
       english: form.english.trim(),
@@ -143,6 +183,42 @@ export default function Home() {
       setNotice("");
       setScreen("home");
     }, 900);
+  };
+
+  const openAdd = () => {
+    setEditingId(null);
+    setForm({ english: "", spanish: "", example: "" });
+    setMobileMenu(false);
+    setScreen("add");
+  };
+
+  const openEdit = (card: Card) => {
+    setEditingId(card.id);
+    setForm({
+      english: card.english,
+      spanish: card.spanish,
+      example: card.example,
+    });
+    setScreen("add");
+  };
+
+  const deleteCard = async (card: Card) => {
+    if (!window.confirm(`¿Eliminar “${card.english}”?`)) return;
+    if (supabase) {
+      const { error } = await supabase
+        .from("flashcards")
+        .delete()
+        .eq("id", card.id);
+      if (error) {
+        setNotice(`No se pudo eliminar: ${error.message}`);
+        return;
+      }
+      setCards((current) => current.filter((item) => item.id !== card.id));
+    } else {
+      persistLocal(cards.filter((item) => item.id !== card.id));
+    }
+    setNotice("Tarjeta eliminada");
+    setTimeout(() => setNotice(""), 1200);
   };
 
   const normalize = (value: string) =>
@@ -227,15 +303,53 @@ export default function Home() {
   return (
     <main className="app-shell">
       <header className="topbar">
-        <button className="brand" onClick={() => setScreen("home")}>
+        <button
+          className="brand"
+          onClick={() => {
+            setScreen("home");
+            setMobileMenu(false);
+          }}
+        >
           <span className="brand-mark">F</span>
           <span>
             FLUENT<span className="brand-accent">UP</span>
           </span>
         </button>
-        <div className="streak">
-          <Flame size={21} fill="currentColor" /> <strong>7</strong>
-          <span>días</span>
+        <nav className={mobileMenu ? "main-nav open" : "main-nav"}>
+          <button
+            className={screen === "home" ? "active" : ""}
+            onClick={() => {
+              setScreen("home");
+              setMobileMenu(false);
+            }}
+          >
+            Inicio
+          </button>
+          <button
+            className={screen === "library" ? "active" : ""}
+            onClick={() => {
+              setScreen("library");
+              setMobileMenu(false);
+            }}
+          >
+            <Library size={17} /> Todas las cartas
+          </button>
+          <button className="nav-add" onClick={openAdd}>
+            <Plus size={17} /> Añadir
+          </button>
+        </nav>
+        <div className="top-actions">
+          <div className="streak">
+            <Flame size={21} fill="currentColor" /> <strong>7</strong>
+            <span>días</span>
+          </div>
+          <button
+            className="menu-button"
+            aria-label="Abrir menú"
+            onClick={() => setMobileMenu(!mobileMenu)}
+          >
+            {mobileMenu ? <X /> : <Menu />}
+          </button>
         </div>
       </header>
 
@@ -294,7 +408,7 @@ export default function Home() {
           </div>
 
           <div className="action-grid">
-            <button className="action-card add" onClick={() => setScreen("add")}>
+            <button className="action-card add" onClick={openAdd}>
               <span className="action-icon">
                 <Plus />
               </span>
@@ -358,9 +472,15 @@ export default function Home() {
             <span className="large-icon lime">
               <Plus />
             </span>
-            <span className="eyebrow">NUEVO APRENDIZAJE</span>
-            <h1>Añade una tarjeta</h1>
-            <p>Escribe una palabra o frase que quieras recordar.</p>
+            <span className="eyebrow">
+              {editingId ? "EDITAR APRENDIZAJE" : "NUEVO APRENDIZAJE"}
+            </span>
+            <h1>{editingId ? "Edita tu tarjeta" : "Añade una tarjeta"}</h1>
+            <p>
+              {editingId
+                ? "Corrige o mejora la información que guardaste."
+                : "Escribe una palabra o frase que quieras recordar."}
+            </p>
             <form onSubmit={addCard}>
               <label>
                 PALABRA O FRASE EN INGLÉS
@@ -396,7 +516,8 @@ export default function Home() {
                 />
               </label>
               <button className="primary-button" type="submit">
-                GUARDAR TARJETA <ChevronRight />
+                {editingId ? "GUARDAR CAMBIOS" : "GUARDAR TARJETA"}{" "}
+                <ChevronRight />
               </button>
             </form>
             {notice && <div className="toast">{notice}</div>}
@@ -497,12 +618,29 @@ export default function Home() {
                   <p>{card.spanish}</p>
                   {card.example && <small>{card.example}</small>}
                 </div>
-                <span className="mastery">
-                  {card.correct_count} <Check size={14} />
-                </span>
+                <div className="card-actions">
+                  <span className="mastery">
+                    {card.correct_count} <Check size={14} />
+                  </span>
+                  <button
+                    className="edit-card"
+                    aria-label={`Editar ${card.english}`}
+                    onClick={() => openEdit(card)}
+                  >
+                    <Pencil size={17} />
+                  </button>
+                  <button
+                    className="delete-card"
+                    aria-label={`Eliminar ${card.english}`}
+                    onClick={() => deleteCard(card)}
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
               </article>
             ))}
           </div>
+          {notice && <div className="toast library-toast">{notice}</div>}
         </section>
       )}
 
