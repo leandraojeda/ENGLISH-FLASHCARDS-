@@ -9,6 +9,22 @@
   --purple-dark: #5b24c8;
   --cream: #fbfaf4;
   --line: #e7e3d9;
+  --surface: #ffffff;
+  --surface-soft: #f8f7f2;
+  --shadow: #ece9df;
+  --header: rgba(255, 255, 255, 0.84);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #f4f1ff;
+  --muted: #aaa6bd;
+  --cream: #11101a;
+  --line: #373348;
+  --surface: #1c1929;
+  --surface-soft: #262237;
+  --shadow: #08070d;
+  --header: rgba(17, 16, 26, 0.88);
 }
 
 * {
@@ -24,6 +40,16 @@ body {
   color: var(--ink);
   font-family: var(--font-body), sans-serif;
   min-height: 100vh;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+:root[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at 5% 8%, #243117 0, transparent 24rem),
+    radial-gradient(circle at 92% 35%, #2a1d42 0, transparent 26rem),
+    var(--cream);
 }
 
 button,
@@ -42,7 +68,7 @@ button {
 
 .topbar {
   align-items: center;
-  background: rgba(255, 255, 255, 0.84);
+  background: var(--header);
   border-bottom: 1px solid rgba(36, 32, 63, 0.08);
   display: flex;
   height: 76px;
@@ -77,6 +103,7 @@ button {
   justify-content: center;
   transform: rotate(-4deg);
   width: 38px;
+  color: #24203f;
 }
 
 .brand-accent {
@@ -120,6 +147,30 @@ button {
   color: var(--ink);
 }
 
+.theme-toggle {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--purple);
+  cursor: pointer;
+  display: flex;
+  height: 40px;
+  justify-content: center;
+  transition: 0.2s ease;
+  width: 40px;
+}
+
+.theme-toggle:hover {
+  background: #eee7ff;
+  transform: rotate(10deg);
+}
+
+:root[data-theme="dark"] .theme-toggle {
+  background: #2a2440;
+  color: var(--lime);
+}
+
 .top-actions {
   align-items: center;
   display: flex;
@@ -128,7 +179,7 @@ button {
 
 .menu-button {
   align-items: center;
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 10px;
   cursor: pointer;
@@ -366,10 +417,10 @@ h3 {
 
 .action-card {
   align-items: center;
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 22px;
-  box-shadow: 0 8px 0 #ece9df;
+  box-shadow: 0 8px 0 var(--shadow);
   cursor: pointer;
   display: grid;
   gap: 17px;
@@ -492,10 +543,10 @@ h3 {
 
 .form-card,
 .quiz-card {
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 30px;
-  box-shadow: 0 12px 0 #ebe8de;
+  box-shadow: 0 12px 0 var(--shadow);
   padding: clamp(28px, 6vw, 52px);
   position: relative;
   text-align: center;
@@ -543,7 +594,7 @@ label {
 
 input,
 textarea {
-  background: #f8f7f2;
+  background: var(--surface-soft);
   border: 2px solid transparent;
   border-radius: 13px;
   color: var(--ink);
@@ -559,7 +610,7 @@ textarea {
 
 input:focus,
 textarea:focus {
-  background: white;
+  background: var(--surface);
   border-color: var(--purple);
 }
 
@@ -581,6 +632,7 @@ textarea {
   justify-content: center;
   letter-spacing: 0.8px;
   padding: 17px 22px;
+  color: #24203f;
 }
 
 .primary-button:active,
@@ -590,7 +642,7 @@ textarea {
 }
 
 .toast {
-  background: var(--ink);
+  background: #24203f;
   border-radius: 12px;
   bottom: 18px;
   color: white;
@@ -727,7 +779,7 @@ textarea {
 
 .card-list article {
   align-items: center;
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 18px;
   display: grid;
@@ -839,6 +891,61 @@ footer {
   font-weight: 800;
 }
 
+:root[data-theme="dark"] .progress-card {
+  background: #08070d;
+  border: 1px solid #39344e;
+}
+
+:root[data-theme="dark"] .toast {
+  background: #08070d;
+}
+
+:root[data-theme="dark"] .action-card.add .action-icon,
+:root[data-theme="dark"] .day.done,
+:root[data-theme="dark"] .main-nav .nav-add {
+  color: #24203f;
+}
+
+:root[data-theme="dark"] .level-badge {
+  box-shadow: 7px 7px 0 #342b48;
+}
+
+:root[data-theme="dark"] .main-nav button:hover,
+:root[data-theme="dark"] .main-nav button.active {
+  background: #30264a;
+}
+
+:root[data-theme="dark"] .stats-grid article,
+:root[data-theme="dark"] .stats-grid button {
+  background: rgba(28, 25, 41, 0.72);
+}
+
+:root[data-theme="dark"] .feedback {
+  background: #193322;
+}
+
+:root[data-theme="dark"] .incorrect .feedback {
+  background: #40201f;
+}
+
+:root[data-theme="dark"] .initial {
+  background: #332655;
+}
+
+:root[data-theme="dark"] .mastery {
+  background: #1c3927;
+  color: #7be6a0;
+}
+
+:root[data-theme="dark"] .edit-card {
+  background: #30264a;
+}
+
+:root[data-theme="dark"] .delete-card {
+  background: #422321;
+  color: #ff9288;
+}
+
 @media (max-width: 700px) {
   .topbar {
     height: 66px;
@@ -846,7 +953,7 @@ footer {
 
   .main-nav {
     align-items: stretch;
-    background: white;
+    background: var(--surface);
     border-bottom: 1px solid var(--line);
     box-shadow: 0 12px 25px rgba(36, 32, 63, 0.12);
     display: none;

@@ -9,10 +9,12 @@ import {
   Flame,
   Library,
   Menu,
+  Moon,
   Pencil,
   Plus,
   RotateCcw,
   Sparkles,
+  Sun,
   Trophy,
   X,
 } from "lucide-react";
@@ -77,6 +79,7 @@ export default function Home() {
   const [notice, setNotice] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const [reviewIndex, setReviewIndex] = useState(0);
   const [answer, setAnswer] = useState("");
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
@@ -103,6 +106,23 @@ export default function Home() {
   useEffect(() => {
     loadCards();
   }, [loadCards]);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("fluentup-theme");
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
+    const enabled = savedTheme ? savedTheme === "dark" : prefersDark;
+    setDarkMode(enabled);
+    document.documentElement.dataset.theme = enabled ? "dark" : "light";
+  }, []);
+
+  const toggleTheme = () => {
+    const next = !darkMode;
+    setDarkMode(next);
+    document.documentElement.dataset.theme = next ? "dark" : "light";
+    localStorage.setItem("fluentup-theme", next ? "dark" : "light");
+  };
 
   const persistLocal = (next: Card[]) => {
     setCards(next);
@@ -339,6 +359,16 @@ export default function Home() {
           </button>
         </nav>
         <div className="top-actions">
+          <button
+            className="theme-toggle"
+            aria-label={
+              darkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro"
+            }
+            title={darkMode ? "Modo claro" : "Modo oscuro"}
+            onClick={toggleTheme}
+          >
+            {darkMode ? <Sun size={19} /> : <Moon size={19} />}
+          </button>
           <div className="streak">
             <Flame size={21} fill="currentColor" /> <strong>7</strong>
             <span>días</span>
