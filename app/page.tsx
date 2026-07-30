@@ -30,7 +30,7 @@ type Card = {
   incorrect_count: number;
 };
 
-type Screen = "home" | "add" | "review" | "library";
+type Screen = "home" | "add" | "review-mode" | "review" | "library";
 
 const starterCards: Card[] = [
   {
@@ -81,10 +81,13 @@ export default function Home() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [reviewIndex, setReviewIndex] = useState(0);
+  const [reviewMode, setReviewMode] = useState<"write" | "self">("write");
+  const [revealed, setRevealed] = useState(false);
   const [answer, setAnswer] = useState("");
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [form, setForm] = useState({ english: "", spanish: "", example: "" });
+  const [meanings, setMeanings] = useState([""]);
 
   const loadCards = useCallback(async () => {
     if (supabase) {
@@ -131,11 +134,12 @@ export default function Home() {
 
   const addCard = async (event: FormEvent) => {
     event.preventDefault();
-    if (!form.english.trim() || !form.spanish.trim()) return;
+    const cleanMeanings = meanings.map((item) => item.trim()).filter(Boolean);
+    if (!form.english.trim() || !cleanMeanings.length) return;
     if (editingId) {
       const changes = {
         english: form.english.trim(),
-        spanish: form.spanish.trim(),
+        spanish: cleanMeanings.join(" / "),
         example: form.example.trim(),
       };
       if (supabase) {
@@ -161,6 +165,7 @@ export default function Home() {
       }
       setEditingId(null);
       setForm({ english: "", spanish: "", example: "" });
+      setMeanings([""]);
       setNotice("¡Tarjeta actualizada!");
       setTimeout(() => {
         setNotice("");
@@ -171,7 +176,7 @@ export default function Home() {
     const card: Card = {
       id: crypto.randomUUID(),
       english: form.english.trim(),
-      spanish: form.spanish.trim(),
+      spanish: cleanMeanings.join(" / "),
       example: form.example.trim(),
       created_at: new Date().toISOString(),
       correct_count: 0,
@@ -198,6 +203,7 @@ export default function Home() {
       persistLocal([card, ...cards]);
     }
     setForm({ english: "", spanish: "", example: "" });
+    setMeanings([""]);
     setNotice("¡Tarjeta guardada! +10 XP");
     setTimeout(() => {
       setNotice("");
@@ -208,6 +214,7 @@ export default function Home() {
   const openAdd = () => {
     setEditingId(null);
     setForm({ english: "", spanish: "", example: "" });
+    setMeanings([""]);
     setMobileMenu(false);
     setScreen("add");
   };
@@ -219,6 +226,7 @@ export default function Home() {
       spanish: card.spanish,
       example: card.example,
     });
+    setMeanings(card.spanish.split(/\s*[/;,]\s*/).filter(Boolean));
     setScreen("add");
   };
 
@@ -290,16 +298,29 @@ export default function Home() {
   const nextReview = () => {
     setAnswer("");
     setResult(null);
+    setRevealed(false);
     if (reviewIndex < cards.length - 1) setReviewIndex(reviewIndex + 1);
     else setScreen("home");
   };
 
-  const startReview = () => {
+  const startReview = (mode: "write" | "self") => {
+    setReviewMode(mode);
     setReviewIndex(0);
     setAnswer("");
     setResult(null);
+    setRevealed(false);
     setScore({ correct: 0, total: 0 });
     setScreen("review");
+  };
+
+  const selfAssess = (correct: boolean) => {
+    if (!cards[reviewIndex]) return;
+    setResult(correct ? "correct" : "incorrect");
+    setScore((current) => ({
+      correct: current.correct + (correct ? 1 : 0),
+      total: current.total + 1,
+    }));
+    updateCardStats(cards[reviewIndex], correct);
   };
 
   const accuracy = useMemo(() => {
@@ -451,7 +472,7 @@ export default function Home() {
             </button>
             <button
               className="action-card review"
-              onClick={startReview}
+              onClick={() => setScreen("review-mode")}
               disabled={!cards.length}
             >
               <span className="action-icon">
@@ -493,6 +514,37 @@ export default function Home() {
         </section>
       )}
 
+      {screen === "review-mode" && (
+        <section className="focus-screen">
+          <button className="back" onClick={() => setScreen("home")}>
+            <ArrowLeft /> Volver
+          </button>
+          <div className="mode-card">
+            <span className="eyebrow">ELIGE CÓMO PRACTICAR</span>
+            <h1>Modo de repaso</h1>
+            <p>Practica escribiendo o responde mentalmente a tu ritmo.</p>
+            <div className="mode-options">
+              <button onClick={() => startReview("write")}>
+                <span className="mode-icon purple">
+                  <Pencil />
+                </span>
+                <strong>Escribir respuesta</strong>
+                <small>Escribe la traducción y la comprobaremos</small>
+                <ChevronRight />
+              </button>
+              <button onClick={() => startReview("self")}>
+                <span className="mode-icon lime">
+                  <RotateCcw />
+                </span>
+                <strong>Recordar mentalmente</strong>
+                <small>Revela la respuesta y marca Bien o Mal</small>
+                <ChevronRight />
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
       {screen === "add" && (
         <section className="focus-screen">
           <button className="back" onClick={() => setScreen("home")}>
@@ -524,17 +576,51 @@ export default function Home() {
                   required
                 />
               </label>
-              <label>
-                SIGNIFICADO EN ESPAÑOL
-                <input
-                  placeholder="Ej. Tómatelo con calma"
-                  value={form.spanish}
-                  onChange={(event) =>
-                    setForm({ ...form, spanish: event.target.value })
-                  }
-                  required
-                />
-              </label>
+              <fieldset className="meanings-field">
+                <legend>SIGNIFICADOS EN ESPAÑOL</legend>
+                {meanings.map((meaning, index) => (
+                  <div className="meaning-row" key={index}>
+                    <input
+                      placeholder={
+                        index === 0
+                          ? "Ej. Tómatelo con calma"
+                          : `Otro significado ${index + 1}`
+                      }
+                      value={meaning}
+                      onChange={(event) =>
+                        setMeanings(
+                          meanings.map((item, itemIndex) =>
+                            itemIndex === index ? event.target.value : item,
+                          ),
+                        )
+                      }
+                      required={index === 0}
+                    />
+                    {meanings.length > 1 && (
+                      <button
+                        type="button"
+                        aria-label={`Quitar significado ${index + 1}`}
+                        onClick={() =>
+                          setMeanings(
+                            meanings.filter(
+                              (_, itemIndex) => itemIndex !== index,
+                            ),
+                          )
+                        }
+                      >
+                        <X size={17} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  className="add-meaning"
+                  type="button"
+                  onClick={() => setMeanings([...meanings, ""])}
+                >
+                  <Plus size={16} /> Añadir otro significado
+                </button>
+              </fieldset>
               <label>
                 EJEMPLO (OPCIONAL)
                 <textarea
@@ -573,32 +659,80 @@ export default function Home() {
             </strong>
           </div>
           <div className={`quiz-card ${result ?? ""}`}>
-            <span className="eyebrow">TRADUCE AL ESPAÑOL</span>
+            <span className="eyebrow">
+              {reviewMode === "write"
+                ? "TRADUCE AL ESPAÑOL"
+                : "RECUERDA LOS SIGNIFICADOS"}
+            </span>
             <h1>{cards[reviewIndex].english}</h1>
             {cards[reviewIndex].example && (
               <p className="example">“{cards[reviewIndex].example}”</p>
             )}
-            <label>
-              TU RESPUESTA
-              <input
-                autoFocus
-                value={answer}
-                disabled={!!result}
-                placeholder="Escribe el significado..."
-                onChange={(event) => setAnswer(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    if (result) nextReview();
-                    else checkAnswer();
-                  }
-                }}
-              />
-            </label>
-            {!result ? (
-              <button className="primary-button purple" onClick={checkAnswer}>
-                COMPROBAR
-              </button>
+            {reviewMode === "write" ? (
+              <>
+                <label>
+                  TU RESPUESTA
+                  <input
+                    autoFocus
+                    value={answer}
+                    disabled={!!result}
+                    placeholder="Escribe uno de los significados..."
+                    onChange={(event) => setAnswer(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        if (result) nextReview();
+                        else checkAnswer();
+                      }
+                    }}
+                  />
+                </label>
+                {!result && (
+                  <button
+                    className="primary-button purple"
+                    onClick={checkAnswer}
+                  >
+                    COMPROBAR
+                  </button>
+                )}
+              </>
             ) : (
+              <>
+                {!revealed && (
+                  <button
+                    className="primary-button purple"
+                    onClick={() => setRevealed(true)}
+                  >
+                    MOSTRAR RESPUESTA
+                  </button>
+                )}
+                {revealed && !result && (
+                  <div className="reveal-answer">
+                    <small>SIGNIFICADOS</small>
+                    {cards[reviewIndex].spanish
+                      .split(/\s*[/;,]\s*/)
+                      .map((meaning) => (
+                        <strong key={meaning}>{meaning}</strong>
+                      ))}
+                    <p>¿Lo recordaste correctamente?</p>
+                    <div>
+                      <button
+                        className="assess wrong"
+                        onClick={() => selfAssess(false)}
+                      >
+                        <X /> MAL
+                      </button>
+                      <button
+                        className="assess right"
+                        onClick={() => selfAssess(true)}
+                      >
+                        <Check /> BIEN
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+            {result && (
               <div className="feedback">
                 <span className="feedback-icon">
                   {result === "correct" ? <Check /> : <X />}

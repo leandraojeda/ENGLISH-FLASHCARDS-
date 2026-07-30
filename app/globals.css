@@ -585,6 +585,203 @@ form,
   text-align: left;
 }
 
+.meanings-field {
+  border: 0;
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+}
+
+.meanings-field legend {
+  color: #5f5a76;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  margin-bottom: 2px;
+}
+
+:root[data-theme="dark"] .meanings-field legend {
+  color: var(--muted);
+}
+
+.meaning-row {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr auto;
+}
+
+.meaning-row input {
+  margin-top: 0;
+}
+
+.meaning-row button {
+  align-items: center;
+  background: #fff0ed;
+  border: 0;
+  border-radius: 10px;
+  color: #d94f45;
+  cursor: pointer;
+  display: flex;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+
+.add-meaning {
+  align-items: center;
+  align-self: start;
+  background: transparent;
+  border: 0;
+  color: var(--purple);
+  cursor: pointer;
+  display: flex;
+  font-size: 11px;
+  font-weight: 900;
+  gap: 5px;
+  padding: 4px 0;
+}
+
+.mode-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 30px;
+  box-shadow: 0 12px 0 var(--shadow);
+  padding: clamp(28px, 6vw, 52px);
+  text-align: center;
+}
+
+.mode-card h1 {
+  font-size: clamp(34px, 6vw, 50px);
+  letter-spacing: -2px;
+  margin: 8px 0;
+}
+
+.mode-card > p {
+  color: var(--muted);
+  margin: 0 0 28px;
+}
+
+.mode-options {
+  display: grid;
+  gap: 13px;
+}
+
+.mode-options > button {
+  align-items: center;
+  background: var(--surface-soft);
+  border: 2px solid transparent;
+  border-radius: 18px;
+  cursor: pointer;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: auto 1fr auto;
+  padding: 17px;
+  text-align: left;
+}
+
+.mode-options > button:hover {
+  border-color: var(--purple);
+}
+
+.mode-options strong,
+.mode-options small {
+  display: block;
+  grid-column: 2;
+}
+
+.mode-options strong {
+  font: 800 16px var(--font-display), sans-serif;
+}
+
+.mode-options small {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: -12px;
+}
+
+.mode-icon {
+  align-items: center;
+  border-radius: 14px;
+  display: flex;
+  grid-row: 1 / 3;
+  height: 48px;
+  justify-content: center;
+  width: 48px;
+}
+
+.mode-icon.purple {
+  background: #e8dcff;
+  color: var(--purple);
+}
+
+.mode-icon.lime {
+  background: var(--lime);
+  color: #24203f;
+}
+
+.mode-options > button > svg {
+  grid-column: 3;
+  grid-row: 1 / 3;
+}
+
+.reveal-answer {
+  background: var(--surface-soft);
+  border-radius: 18px;
+  padding: 20px;
+}
+
+.reveal-answer > small {
+  color: var(--purple);
+  display: block;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.reveal-answer > strong {
+  display: block;
+  font: 800 21px var(--font-display), sans-serif;
+}
+
+.reveal-answer > p {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  margin: 20px 0 10px;
+}
+
+.reveal-answer > div {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.assess {
+  align-items: center;
+  border: 0;
+  border-radius: 13px;
+  cursor: pointer;
+  display: flex;
+  font-size: 12px;
+  font-weight: 900;
+  gap: 6px;
+  justify-content: center;
+  padding: 14px;
+}
+
+.assess.wrong {
+  background: #ffe1dd;
+  color: #c84037;
+}
+
+.assess.right {
+  background: #dff9d6;
+  color: #23814a;
+}
+
 label {
   color: #5f5a76;
   font-size: 10px;
