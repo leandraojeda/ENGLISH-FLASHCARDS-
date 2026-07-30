@@ -82,6 +82,7 @@ const supabase = getSupabase();
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("home");
   const [cards, setCards] = useState<Card[]>([]);
+  const [storageMode, setStorageMode] = useState<"cloud" | "local">("local");
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -107,12 +108,14 @@ export default function Home() {
         .order("created_at", { ascending: false });
       if (!error && data) {
         setCards(data);
+        setStorageMode("cloud");
         setLoading(false);
         return;
       }
     }
     const saved = localStorage.getItem("english-flashcards");
     setCards(saved ? JSON.parse(saved) : starterCards);
+    setStorageMode("local");
     setLoading(false);
   }, []);
 
@@ -152,13 +155,18 @@ export default function Home() {
         spanish: cleanMeanings.join(" / "),
         example: form.example.trim(),
       };
-      if (supabase) {
-        const { error } = await supabase
+      if (supabase && storageMode === "cloud") {
+        const { data, error } = await supabase
           .from("flashcards")
           .update(changes)
-          .eq("id", editingId);
-        if (error) {
-          setNotice(`No se pudo actualizar: ${error.message}`);
+          .eq("id", editingId)
+          .select("id");
+        if (error || !data?.length) {
+          setNotice(
+            `No se pudo actualizar: ${
+              error?.message || "la tarjeta no existe en Supabase"
+            }`,
+          );
           return;
         }
         setCards((current) =>
@@ -192,7 +200,7 @@ export default function Home() {
       correct_count: 0,
       incorrect_count: 0,
     };
-    if (supabase) {
+    if (supabase && storageMode === "cloud") {
       const { data, error } = await supabase
         .from("flashcards")
         .insert(card)
@@ -242,13 +250,18 @@ export default function Home() {
 
   const deleteCard = async (card: Card) => {
     if (!window.confirm(`¿Eliminar “${card.english}”?`)) return;
-    if (supabase) {
-      const { error } = await supabase
+    if (supabase && storageMode === "cloud") {
+      const { data, error } = await supabase
         .from("flashcards")
         .delete()
-        .eq("id", card.id);
-      if (error) {
-        setNotice(`No se pudo eliminar: ${error.message}`);
+        .eq("id", card.id)
+        .select("id");
+      if (error || !data?.length) {
+        setNotice(
+          `No se pudo eliminar: ${
+            error?.message || "la tarjeta no existe en Supabase"
+          }`,
+        );
         return;
       }
       setCards((current) => current.filter((item) => item.id !== card.id));
@@ -292,7 +305,7 @@ export default function Home() {
     };
     const next = cards.map((item) => (item.id === card.id ? updated : item));
     setCards(next);
-    if (supabase) {
+    if (supabase && storageMode === "cloud") {
       await supabase
         .from("flashcards")
         .update({
@@ -503,7 +516,8 @@ export default function Home() {
               <h2>¿Qué haremos hoy?</h2>
             </div>
             <span className="cloud-status">
-              <i /> {supabase ? "Sincronizado" : "Modo local"}
+              <i className={storageMode === "cloud" ? "" : "local"} />{" "}
+              {storageMode === "cloud" ? "Sincronizado" : "Modo local"}
             </span>
           </div>
 

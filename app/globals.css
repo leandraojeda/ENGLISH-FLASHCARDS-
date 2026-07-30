@@ -409,6 +409,10 @@ h3 {
   width: 7px;
 }
 
+.cloud-status i.local {
+  background: #f2a12b;
+}
+
 .action-grid {
   display: grid;
   gap: 18px;
