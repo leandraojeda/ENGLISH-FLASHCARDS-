@@ -161,12 +161,25 @@ export default function Home() {
           .update(changes)
           .eq("id", editingId)
           .select("id");
-        if (error || !data?.length) {
-          setNotice(
-            `No se pudo actualizar: ${
-              error?.message || "la tarjeta no existe en Supabase"
-            }`,
+        if (error) {
+          setNotice(`No se pudo actualizar: ${error.message}`);
+          return;
+        }
+        if (!data?.length) {
+          persistLocal(
+            cards.map((card) =>
+              card.id === editingId ? { ...card, ...changes } : card,
+            ),
           );
+          setStorageMode("local");
+          setNotice("Tarjeta local actualizada");
+          setEditingId(null);
+          setForm({ english: "", spanish: "", example: "" });
+          setMeanings([""]);
+          setTimeout(() => {
+            setNotice("");
+            setScreen("library");
+          }, 700);
           return;
         }
         setCards((current) =>
@@ -256,12 +269,15 @@ export default function Home() {
         .delete()
         .eq("id", card.id)
         .select("id");
-      if (error || !data?.length) {
-        setNotice(
-          `No se pudo eliminar: ${
-            error?.message || "la tarjeta no existe en Supabase"
-          }`,
-        );
+      if (error) {
+        setNotice(`No se pudo eliminar: ${error.message}`);
+        return;
+      }
+      if (!data?.length) {
+        persistLocal(cards.filter((item) => item.id !== card.id));
+        setStorageMode("local");
+        setNotice("Tarjeta local eliminada");
+        setTimeout(() => setNotice(""), 1200);
         return;
       }
       setCards((current) => current.filter((item) => item.id !== card.id));
