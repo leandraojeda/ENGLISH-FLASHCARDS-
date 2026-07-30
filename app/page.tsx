@@ -1,6 +1,13 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  FormEvent,
+  PointerEvent as ReactPointerEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   ArrowLeft,
   BookOpen,
@@ -83,6 +90,9 @@ export default function Home() {
   const [reviewIndex, setReviewIndex] = useState(0);
   const [reviewMode, setReviewMode] = useState<"write" | "self">("write");
   const [revealed, setRevealed] = useState(false);
+  const [dragX, setDragX] = useState(0);
+  const [dragStart, setDragStart] = useState<number | null>(null);
+  const [swipeLocked, setSwipeLocked] = useState(false);
   const [answer, setAnswer] = useState("");
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0 });
@@ -299,6 +309,9 @@ export default function Home() {
     setAnswer("");
     setResult(null);
     setRevealed(false);
+    setDragX(0);
+    setDragStart(null);
+    setSwipeLocked(false);
     if (reviewIndex < cards.length - 1) setReviewIndex(reviewIndex + 1);
     else setScreen("home");
   };
@@ -309,6 +322,8 @@ export default function Home() {
     setAnswer("");
     setResult(null);
     setRevealed(false);
+    setDragX(0);
+    setSwipeLocked(false);
     setScore({ correct: 0, total: 0 });
     setScreen("review");
   };
@@ -321,6 +336,40 @@ export default function Home() {
       total: current.total + 1,
     }));
     updateCardStats(cards[reviewIndex], correct);
+  };
+
+  const finishSwipe = (correct: boolean) => {
+    if (swipeLocked) return;
+    setSwipeLocked(true);
+    setDragX(correct ? 520 : -520);
+    selfAssess(correct);
+    window.setTimeout(nextReview, 280);
+  };
+
+  const handlePointerDown = (event: ReactPointerEvent<HTMLElement>) => {
+    if (
+      reviewMode !== "self" ||
+      !revealed ||
+      result ||
+      swipeLocked ||
+      (event.target as HTMLElement).closest("button")
+    )
+      return;
+    setDragStart(event.clientX);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handlePointerMove = (event: ReactPointerEvent<HTMLElement>) => {
+    if (dragStart === null || swipeLocked) return;
+    setDragX(event.clientX - dragStart);
+  };
+
+  const handlePointerUp = () => {
+    if (dragStart === null || swipeLocked) return;
+    if (dragX >= 80) finishSwipe(true);
+    else if (dragX <= -80) finishSwipe(false);
+    else setDragX(0);
+    setDragStart(null);
   };
 
   const accuracy = useMemo(() => {
@@ -658,7 +707,39 @@ export default function Home() {
               {reviewIndex + 1}/{cards.length}
             </strong>
           </div>
-          <div className={`quiz-card ${result ?? ""}`}>
+          <div
+            className={`quiz-card ${result ?? ""} ${
+              dragStart !== null ? "dragging" : ""
+            }`}
+            style={
+              reviewMode === "self"
+                ? {
+                    transform: `translateX(${dragX}px) rotate(${dragX / 24}deg)`,
+                    opacity: Math.max(0.25, 1 - Math.abs(dragX) / 650),
+                  }
+                : undefined
+            }
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+          >
+            {reviewMode === "self" && revealed && !result && (
+              <>
+                <span
+                  className="swipe-stamp wrong"
+                  style={{ opacity: Math.min(1, Math.max(0, -dragX / 80)) }}
+                >
+                  MAL
+                </span>
+                <span
+                  className="swipe-stamp right"
+                  style={{ opacity: Math.min(1, Math.max(0, dragX / 80)) }}
+                >
+                  BIEN
+                </span>
+              </>
+            )}
             <span className="eyebrow">
               {reviewMode === "write"
                 ? "TRADUCE AL ESPAÑOL"
@@ -714,16 +795,20 @@ export default function Home() {
                         <strong key={meaning}>{meaning}</strong>
                       ))}
                     <p>¿Lo recordaste correctamente?</p>
+                    <div className="swipe-hint">
+                      <span>← Desliza: Mal</span>
+                      <span>Bien: Desliza →</span>
+                    </div>
                     <div>
                       <button
                         className="assess wrong"
-                        onClick={() => selfAssess(false)}
+                        onClick={() => finishSwipe(false)}
                       >
                         <X /> MAL
                       </button>
                       <button
                         className="assess right"
-                        onClick={() => selfAssess(true)}
+                        onClick={() => finishSwipe(true)}
                       >
                         <Check /> BIEN
                       </button>
