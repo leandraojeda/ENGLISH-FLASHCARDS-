@@ -122,7 +122,13 @@ export default function Home() {
         .select()
         .single();
       if (error) {
-        setNotice("No se pudo guardar en la nube. Revisa la configuración.");
+        const detail =
+          error.code === "42P01"
+            ? "Falta crear la tabla flashcards en Supabase."
+            : error.code === "42501"
+              ? "Supabase bloqueó la escritura. Ejecuta nuevamente schema.sql."
+              : error.message;
+        setNotice(`No se pudo guardar: ${detail}`);
         return;
       }
       setCards((current) => [data, ...current]);
